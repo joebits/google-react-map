@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import { render } from "react-dom";
 import './App.css';
-import Map from "./components/map";
-import Layout from './components/layout';
-import { InfoWindow } from './components/infoWindow';
+import Map from "./components/Map";
+import Layout from './components/Layout';
+import { InfoWindow } from './components/InfoWindow';
 import { sthlmOptions } from "./sthlmOptions";
 import { connect } from 'react-redux'
 import { addLocation } from './store/actions'
+import { LocationWindow } from './components/LocationWindow';
 
 const containerStyle = {
   height: '100%',
@@ -26,33 +27,44 @@ class App extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
+  componentWillReceiveProps({ showLocation }) {
+    this.showLocationWindow(showLocation);
+  }
+
   handleSubmit(event) {
+    event.preventDefault();
     const value = event.target.elements[0].value;
     this.props.dispatch(addLocation({
       name: value,
-      lat: this.state.lat,
-      lng: this.state.lng
+      latLng: this.state.latLng
     }));
     this.state.infoWindow.close();
   }
 
-  openWindow(e, map) {
-    //Remove old window before opening a new.
-    //TODO: Remove infoElement?
-    if (this.state.infoWindow) {
-      this.state.infoWindow.close();
-    }
-    //Set info window
-    const infoWindow = new window.google.maps.InfoWindow({
-      content: '<div id="infoContainer" />',
-      position: { lat: e.latLng.lat(), lng: e.latLng.lng() }
+  showLocationWindow(showLocation) {
+    //set center from location
+    window.gMap.setCenter(showLocation.latLng);
+    const infoWindow = this.setInfoWindow(showLocation.latLng.lat(), showLocation.latLng.lng());
+    infoWindow.addListener('domready', e => {
+      render(
+        <LocationWindow showLocation={showLocation} />,
+        document.getElementById('infoContainer'))
+    })
+
+    //save window and coordinates for later
+    this.setState({
+      infoWindow: infoWindow
     });
 
+    infoWindow.open(window.gMap)
+  }
+
+  openWindow(event) {
+    const lat = event.latLng.lat();
+    const lng = event.latLng.lng();
+    const infoWindow = this.setInfoWindow(lat, lng)
     //Append custom window to the infoContainer when dom is ready
     infoWindow.addListener('domready', e => {
-      document.getElementById('infoContainer').addEventListener('submit', (e) => {
-        e.preventDefault();
-      })
       render(
         <InfoWindow handleSubmit={this.handleSubmit} />,
         document.getElementById('infoContainer'))
@@ -61,12 +73,29 @@ class App extends Component {
     //save window and coordinates for later
     this.setState({
       infoWindow: infoWindow,
-      lat: e.latLng.lat(),
-      lng: e.latLng.lng()
+      lat,
+      lng,
+      latLng: event.latLng
     });
 
-    infoWindow.open(map)
+    infoWindow.open(window.gMap)
+  }
 
+  setInfoWindow(lat, lng) {
+    //Remove old window before opening a new.
+    //TODO: Remove infoElement?
+    if (this.state.infoWindow) {
+      this.state.infoWindow.close();
+      window.locationWindow = null;
+    }
+    //Set info window
+    const infoWindow = new window.google.maps.InfoWindow({
+      content: '<div id="infoContainer" />',
+      position: { lat, lng }
+    });
+
+    window.locationWindow = infoWindow;
+    return infoWindow;
   }
 
   render() {
@@ -78,7 +107,7 @@ class App extends Component {
           options={sthlmOptions}
           onMapLoad={map => {
             map.addListener('click', (event) => {
-              this.openWindow(event, map);
+              this.openWindow(event);
             });
           }}
         />
@@ -87,6 +116,6 @@ class App extends Component {
   }
 }
 
+const mapStateToProps = state => ({ showLocation: state.showLocation });
 
-
-export default connect()(App)
+export default connect(mapStateToProps)(App)

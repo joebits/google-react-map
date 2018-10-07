@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Menu, Icon, Input } from 'antd';
-import { connect } from 'react-redux'
+import { connect } from 'react-redux';
+import { showLocation } from '../store/actions';
 
 const SubMenu = Menu.SubMenu;
 
@@ -32,6 +33,11 @@ class Layout extends Component {
         }
     }
 
+    openLocation(id) {
+        this.setState({ openKeys: [] });
+        this.props.showLocation(id);
+    }
+
     handleInputChange(e) {
         this.setState({ filterValue: e.target.value })
     }
@@ -49,7 +55,7 @@ class Layout extends Component {
                         .filter(l => this.state.filterValue ? l.name.toUpperCase()
                             .includes(this.state.filterValue.toUpperCase()) : l)
                         .map(l =>
-                            <Menu.Item key={l.id}>{l.name}</Menu.Item>
+                            <Menu.Item key={l.id} onClick={() => this.openLocation(l.id)}>{l.name}</Menu.Item>
                         )}
                 </SubMenu>
             </Menu>
@@ -57,8 +63,10 @@ class Layout extends Component {
     }
 }
 
-const mapStateToProps = state => ({
-    locations: state
+const mapStateToProps = state => ({ locations: state.locations });
+
+const mapDispatchToProps = (dispatch) => ({
+    showLocation: (id) => dispatch(showLocation({ id: id }))
 })
 
-export default connect(mapStateToProps)(Layout);
+export default connect(mapStateToProps, mapDispatchToProps)(Layout);

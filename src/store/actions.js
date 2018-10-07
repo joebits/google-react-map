@@ -3,11 +3,15 @@ export const addLocation = (action) => ({
   type: 'ADD_LOCATION',
   id: locationId++,
   name: action.name,
-  lat: action.lat,
-  lng: action.lng
+  latLng: action.latLng,
 })
 export const deleteLocation = (action) => ({
   type: 'DELETE_LOCATION',
   id: action.id,
   name: action.name
+})
+
+export const showLocation = (action) => ({
+  type: 'SHOW_LOCATION',
+  id: action.id
 })
