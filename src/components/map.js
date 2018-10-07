@@ -1,8 +1,18 @@
 import React, { Component } from 'react';
-// import { render } from 'react-dom';
-import "./map.css";
 import { API_KEY } from "../API_KEY";
 
+
+const mapStyle = {
+  display: 'block',
+  position: 'absolute',
+  bottom: 0,
+  top: 0,
+  left: 0,
+  right: 0,
+  marginTop: '48px',
+  height: 'auto',
+  width: '100%'
+}
 class Map extends Component {
   constructor(props) {
     super(props);
@@ -17,6 +27,7 @@ class Map extends Component {
   }
 
   componentDidMount() {
+    // If google maps hasn't been loaded we create the script element
     if (!window.google) {
       var s = document.createElement('script');
       s.type = 'text/javascript';
@@ -33,7 +44,7 @@ class Map extends Component {
 
   render() {
     return (
-      <div style={{ position: 'relative', height: 500, width: '100%' }} id={this.props.id} />
+      <div style={mapStyle} id={this.props.id} />
     );
   }
 }
